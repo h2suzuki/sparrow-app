@@ -2,7 +2,11 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import path from "path";
 
-const SPARROW_BASE_PATH = process.env.SPARROW_BASE_PATH || "/";
+const rawBasePath = process.env.SPARROW_BASE_PATH || "/";
+// trailing slash so base + asset filename concatenates correctly
+const SPARROW_BASE_PATH = rawBasePath.endsWith("/")
+  ? rawBasePath
+  : rawBasePath + "/";
 
 const normalizeChunkName = (value: string) =>
   value
