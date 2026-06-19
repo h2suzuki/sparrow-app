@@ -3,10 +3,13 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import path from "path";
 
 const rawBasePath = process.env.SPARROW_BASE_PATH || "/";
-// trailing slash so base + asset filename concatenates correctly
-const SPARROW_BASE_PATH = rawBasePath.endsWith("/")
+// normalize to leading + trailing slash so base + asset filename concatenates correctly
+const withLeadingSlash = rawBasePath.startsWith("/")
   ? rawBasePath
-  : rawBasePath + "/";
+  : "/" + rawBasePath;
+const SPARROW_BASE_PATH = withLeadingSlash.endsWith("/")
+  ? withLeadingSlash
+  : withLeadingSlash + "/";
 
 const normalizeChunkName = (value: string) =>
   value
@@ -71,17 +74,23 @@ export default defineConfig(async () => ({
     {
       name: "patch-curlconverter-wasm-base",
       transform(code: string, id: string) {
-        if (id.includes("node_modules/curlconverter")) {
-          return code
-            .replace(
-              'return "/" + scriptName;',
-              `return ${JSON.stringify(SPARROW_BASE_PATH)} + scriptName;`,
-            )
-            .replace(
-              'Parser.Language.load("/tree-sitter-bash.wasm")',
-              `Parser.Language.load(${JSON.stringify(SPARROW_BASE_PATH + "tree-sitter-bash.wasm")})`,
-            );
+        if (!id.includes("node_modules/curlconverter")) return;
+        const patched = code
+          .replace(
+            'return "/" + scriptName;',
+            `return ${JSON.stringify(SPARROW_BASE_PATH)} + scriptName;`,
+          )
+          .replace(
+            'Parser.Language.load("/tree-sitter-bash.wasm")',
+            `Parser.Language.load(${JSON.stringify(SPARROW_BASE_PATH + "tree-sitter-bash.wasm")})`,
+          );
+        // fail loudly if the upstream wasm-path markers ever change
+        if (id.includes("webParser") && patched === code) {
+          throw new Error(
+            `patch-curlconverter-wasm-base: wasm path markers not found in ${id}`,
+          );
         }
+        return patched;
       },
     },
   ],
