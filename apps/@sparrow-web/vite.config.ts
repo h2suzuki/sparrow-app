@@ -2,6 +2,8 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import path from "path";
 
+const SPARROW_BASE_PATH = process.env.SPARROW_BASE_PATH || "/";
+
 const normalizeChunkName = (value: string) =>
   value
     .replace(/^@/, "")
@@ -34,6 +36,7 @@ const getNodeModulePackageName = (id: string) => {
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
+  base: SPARROW_BASE_PATH,
   plugins: [
     svelte(),
     {
@@ -58,6 +61,22 @@ export default defineConfig(async () => ({
             'const marker = query(`[data-svnav-route-start="${id}"]`);\n\tlet current = marker.nextElementSibling;',
             'const marker = query(`[data-svnav-route-start="${id}"]`);\n\tif (!marker) return null;\n\tlet current = marker.nextElementSibling;',
           );
+        }
+      },
+    },
+    {
+      name: "patch-curlconverter-wasm-base",
+      transform(code: string, id: string) {
+        if (id.includes("node_modules/curlconverter")) {
+          return code
+            .replace(
+              'return "/" + scriptName;',
+              `return ${JSON.stringify(SPARROW_BASE_PATH)} + scriptName;`,
+            )
+            .replace(
+              'Parser.Language.load("/tree-sitter-bash.wasm")',
+              `Parser.Language.load(${JSON.stringify(SPARROW_BASE_PATH + "tree-sitter-bash.wasm")})`,
+            );
         }
       },
     },
@@ -140,7 +159,7 @@ export default defineConfig(async () => ({
     // Exclude packages that need to be patched by transform plugins during dev.
     // Pre-bundling merges them into a single chunk, so the transform id checks
     // (e.g. id.endsWith("visual-element.js")) would never match.
-    exclude: ["svelte-motion", "svelte-navigator"],
+    exclude: ["svelte-motion", "svelte-navigator", "curlconverter", "web-tree-sitter"],
     esbuildOptions: {
       target: "esnext",
     },

@@ -18,7 +18,9 @@ COPY apps/@sparrow-web ./apps/@sparrow-web
 # Install dependencies (using yarn to respect the workspace setup)
 RUN yarn install --frozen-lockfile
 
-# Build the web app
+# Build the web app under an optional URL path prefix (default "/")
+ARG BASE_PATH=/
+ENV SPARROW_BASE_PATH=${BASE_PATH}
 WORKDIR /app/apps/@sparrow-web
 RUN yarn build
 
