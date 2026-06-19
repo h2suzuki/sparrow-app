@@ -2,6 +2,12 @@ const runtimeConfig = window.runtimeConfig || {};
 
 const constants = {
   API_URL: runtimeConfig.VITE_WEB_API_URL ?? import.meta.env.VITE_WEB_API_URL,
+  AUTOLOGIN_EMAIL:
+    runtimeConfig.VITE_WEB_AUTOLOGIN_EMAIL ??
+    import.meta.env.VITE_WEB_AUTOLOGIN_EMAIL,
+  AUTOLOGIN_PASSWORD:
+    runtimeConfig.VITE_WEB_AUTOLOGIN_PASSWORD ??
+    import.meta.env.VITE_WEB_AUTOLOGIN_PASSWORD,
   ENABLE_MIX_PANEL:
     runtimeConfig.VITE_WEB_ENABLE_MIX_PANEL ??
     import.meta.env.VITE_WEB_ENABLE_MIX_PANEL,

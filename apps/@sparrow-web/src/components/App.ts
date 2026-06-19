@@ -19,6 +19,7 @@ import { TeamRepository } from "src/repositories/team.repository";
 import { EnvironmentRepository } from "src/repositories/environment.repository";
 import { WorkspaceRepository } from "src/repositories/workspace.repository";
 import { WorkspaceService } from "src/services/workspace.service";
+import { loginUser } from "src/services/auth.service";
 import { CollectionService } from "src/services/collection.service";
 import { CollectionRepository } from "src/repositories/collection.repository";
 import { createDeepCopy } from "@sparrow/common/utils";
@@ -430,6 +431,24 @@ const clearLocalDB = async (): Promise<void> => {
 };
 
 export async function handleLogin(url: string) {
+  // optional headless auto-login for self-host / kiosk deployments
+  if (constants.AUTOLOGIN_EMAIL && constants.AUTOLOGIN_PASSWORD) {
+    const existing = getAuthJwt();
+    if (!existing[0] || !existing[1]) {
+      const res = await loginUser({
+        email: constants.AUTOLOGIN_EMAIL,
+        password: constants.AUTOLOGIN_PASSWORD,
+      });
+      if (res?.isSuccessful) {
+        const accessToken = res.data.data.accessToken.token;
+        setAuthJwt(constants.AUTH_TOKEN, accessToken);
+        setAuthJwt(constants.REF_TOKEN, res.data.data.refreshToken.token);
+        setUser(jwtDecode(accessToken));
+        navigate("/app/collections");
+        return;
+      }
+    }
+  }
   const tokens = getAuthJwt();
   const urlParams = new URLSearchParams(url.split("?")[1]);
   const workspaceId = urlParams.get("workspaceId");

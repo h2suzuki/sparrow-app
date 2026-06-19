@@ -1,6 +1,8 @@
 interface Window {
   runtimeConfig?: {
     VITE_WEB_API_URL?: string;
+    VITE_WEB_AUTOLOGIN_EMAIL?: string;
+    VITE_WEB_AUTOLOGIN_PASSWORD?: string;
     VITE_WEB_SPARROW_SUPPORT_EMAIL?: string;
     VITE_WEB_SPARROW_OAUTH?: string;
     VITE_WEB_ENABLE_MIX_PANEL?: string;
